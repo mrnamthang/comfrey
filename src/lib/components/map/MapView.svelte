@@ -46,7 +46,8 @@
       container,
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
       center,
-      zoom
+      zoom,
+      preserveDrawingBuffer: true
     });
 
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');

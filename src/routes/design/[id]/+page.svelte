@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type mapboxgl from 'mapbox-gl';
 	import type { Element } from '$lib/types';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import MapView from '$lib/components/map/MapView.svelte';
@@ -46,6 +47,9 @@
 			if (loaded) {
 				project.current = loaded;
 				project.activeDesignId = loaded.designs[0]?.id ?? null;
+			} else {
+				await goto('/');
+				return;
 			}
 		}
 	});
@@ -69,6 +73,27 @@
 		if (project.current) {
 			const [lng, lat] = project.current.land.location;
 			m.flyTo({ center: [lng, lat], zoom: 17, duration: 0 });
+
+			// Render boundary outline
+			const bnd = project.current.land.boundary;
+			if (bnd) {
+				m.addSource('boundary', {
+					type: 'geojson',
+					data: { type: 'Feature', geometry: bnd, properties: {} }
+				});
+				m.addLayer({
+					id: 'boundary-fill',
+					type: 'fill',
+					source: 'boundary',
+					paint: { 'fill-color': '#15803d', 'fill-opacity': 0.05 }
+				});
+				m.addLayer({
+					id: 'boundary-line',
+					type: 'line',
+					source: 'boundary',
+					paint: { 'line-color': '#15803d', 'line-width': 2, 'line-dasharray': [2, 2] }
+				});
+			}
 		}
 	}
 
