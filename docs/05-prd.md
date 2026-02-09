@@ -227,8 +227,9 @@ interface Design {
   elements: Element[];
   zones: Zone[];
   layers: Layer[];
-  actionPlan: ActionPlan;
   camera: { center: [number, number]; zoom: number; bearing: number };
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface Element {
@@ -352,7 +353,7 @@ interface AdvisorState {
 - **`ClimateType` + `Hemisphere` drive tip filtering** — derived from site analysis, used to show/hide context-specific advice
 - **`AsyncState<T>` wraps all async data** — ensures every API-dependent value has explicit loading/error states
 - **`version` field on Project** — enables forward-compatible data migrations when schema changes
-- **`ActionPlan` is auto-generated** from placed elements — each `ElementType` has an `implementationPhase`, and the plan is rebuilt whenever elements change
+- **`ActionPlan` is derived, not stored** — computed on load and recomputed whenever elements change. Not persisted to IndexedDB, which avoids stale plans if the generation logic changes between versions
 - **Store as flat JSON** in IndexedDB — trivial to migrate to PostgreSQL + PostGIS later
 
 ### 5.2 Project Structure
@@ -635,10 +636,16 @@ Mapbox Geocoding API ──→ [lng, lat]
  * temperature and rainfall data from Open-Meteo.
  *
  * Based on simplified Koppen climate classification:
- * - Tropical: coldest month avg > 18°C
- * - Subtropical: coldest month avg 10-18°C, warmest > 22°C
- * - Temperate: coldest month avg 0-10°C
- * - Arid: annual rainfall < 250mm OR annual rainfall < 500mm AND avg temp > 18°C
+ * - Tropical: coldest month avg >= 18°C
+ * - Subtropical: coldest month avg >= 10°C and < 18°C, warmest >= 22°C
+ * - Temperate: coldest month avg < 10°C (or subtropical temp range but warmest < 22°C)
+ * - Arid: annual rainfall < 250mm OR (annual rainfall < 500mm AND annual avg temp >= 18°C)
+ *
+ * Threshold decisions (all use >= for lower bounds, < for upper bounds):
+ * - 18°C is the tropical/subtropical boundary: >= 18 = tropical, < 18 = subtropical or below
+ * - 10°C is the subtropical/temperate boundary: >= 10 = subtropical candidate, < 10 = temperate
+ * - 22°C warmest month distinguishes subtropical from cool-temperate within the 10-18°C band
+ * - 250mm is the absolute arid threshold; 500mm is the hot-arid threshold
  *
  * Hemisphere is derived from latitude (positive = northern, negative = southern).
  * This affects sun path advice (equator-facing = north in southern hemisphere, south in northern).
@@ -655,15 +662,18 @@ function deriveClimateType(
   if (annualRainfall < 250) {
     return { type: 'arid', hemisphere };
   }
-  if (annualRainfall < 500 && avgTempColdestMonth > 18) {
+  // Hot-arid: low rainfall AND warm annual average (catches desert climates
+  // with cool winters like Alice Springs where coldest month is 12°C but avg is 24°C)
+  const avgAnnualTemp = (avgTempColdestMonth + avgTempWarmestMonth) / 2;
+  if (annualRainfall < 500 && avgAnnualTemp >= 18) {
     return { type: 'arid', hemisphere };
   }
 
-  // Temperature-based classification
-  if (avgTempColdestMonth > 18) {
+  // Temperature-based classification (all lower bounds use >=)
+  if (avgTempColdestMonth >= 18) {
     return { type: 'tropical', hemisphere };
   }
-  if (avgTempColdestMonth >= 10 && avgTempWarmestMonth > 22) {
+  if (avgTempColdestMonth >= 10 && avgTempWarmestMonth >= 22) {
     return { type: 'subtropical', hemisphere };
   }
   return { type: 'temperate', hemisphere };
@@ -671,6 +681,8 @@ function deriveClimateType(
 ```
 
 **Test cases for `deriveClimateType()`:**
+
+*Real-world locations:*
 
 | Location | Coldest Month | Warmest Month | Rainfall | Expected |
 |----------|--------------|---------------|----------|----------|
@@ -680,6 +692,23 @@ function deriveClimateType(
 | Alice Springs, Australia | 12°C | 36°C | 280mm | arid, southern |
 | Marrakech, Morocco | 11°C | 37°C | 240mm | arid, northern |
 | Hanoi, Vietnam | 17°C | 29°C | 1700mm | subtropical, northern |
+
+*Boundary condition tests (exact thresholds):*
+
+| Description | Coldest Month | Warmest Month | Rainfall | Expected | Rationale |
+|-------------|--------------|---------------|----------|----------|-----------|
+| Exactly 18°C coldest (tropical floor) | 18°C | 30°C | 1500mm | **tropical**, northern | >= 18 is tropical |
+| Just below tropical threshold | 17.9°C | 30°C | 1500mm | **subtropical**, northern | < 18 falls to subtropical (warmest >= 22) |
+| Exactly 10°C coldest (subtropical floor) | 10°C | 25°C | 800mm | **subtropical**, southern | >= 10 with warmest >= 22 |
+| Just below subtropical threshold | 9.9°C | 25°C | 800mm | **temperate**, southern | < 10 is always temperate |
+| Subtropical temp range, cool warmest | 12°C | 21.9°C | 900mm | **temperate**, northern | >= 10 but warmest < 22 falls to temperate |
+| Exactly 22°C warmest (subtropical qualifier) | 12°C | 22°C | 900mm | **subtropical**, northern | >= 22 qualifies as subtropical |
+| Exactly 250mm rainfall | 20°C | 35°C | 250mm | **tropical**, northern | 250mm is NOT < 250, so not arid; >= 18 = tropical |
+| Just below 250mm rainfall | 20°C | 35°C | 249mm | **arid**, northern | < 250 = always arid regardless of temp |
+| Hot-arid boundary (exactly 500mm + hot) | 18°C | 35°C | 500mm | **tropical**, northern | 500mm is NOT < 500, so hot-arid rule doesn't apply; >= 18 = tropical |
+| Hot-arid just under 500mm | 18°C | 35°C | 499mm | **arid**, northern | < 500 AND coldest >= 18 = arid (overrides tropical) |
+| Equator (latitude 0) | 25°C | 28°C | 2000mm | tropical, **northern** | latitude >= 0 assigns northern hemisphere |
+| Just south of equator | 25°C | 28°C | 2000mm | tropical, **southern** | latitude < 0 assigns southern hemisphere (use lat = -0.01) |
 
 ### 5.6 Core Interactions
 
@@ -1217,7 +1246,7 @@ Year 3: Integration
 | IndexedDB quota exceeded | Show banner with download backup option (see F8) |
 | Schema version mismatch | Auto-migrate on load using `version` field. If migration fails, show: "This project was saved with a newer version of Comfrey. Please update." |
 | Corrupted IndexedDB data | Try-catch on load. If JSON parse fails, show: "This project's data appears corrupted. [Download raw data] [Delete project]" |
-| Concurrent tabs | Not supported in MVP. Show warning if same project is open in multiple tabs: "This project is open in another tab. Changes may conflict." |
+| Concurrent tabs | **Deferred from MVP.** No detection or warning is implemented. If a user opens the same project in two tabs, the last tab to auto-save wins — this is a known data-loss risk accepted for MVP simplicity. Post-MVP, use the `BroadcastChannel` API to detect concurrent editors: on project load, broadcast `{ type: 'project-opened', projectId }` and listen for conflicts. If a conflict is detected, show: "This project is open in another tab. Changes may conflict." |
 
 ### 7.4 Offline Behavior (MVP)
 
@@ -1277,13 +1306,17 @@ Comfrey requires an internet connection for:
 
 **Flow**:
 1. User has an existing design with house at position A
-2. User moves house to position B
-3. System prompts: "Regenerate zones around new house position? Your zone edits will be lost."
-4. User confirms → zones regenerate around new position
-5. Advisor tips re-fire for the new context (e.g., different sun orientation)
-6. User compares the new layout, decides whether to keep it or undo (manual — undo deferred)
+2. User exports current design as PNG (preserves layout A for comparison)
+3. User moves house to position B
+4. System prompts: "Regenerate zones around new house position? Your zone edits will be lost."
+5. User confirms → zones regenerate around new position
+6. Advisor tips re-fire for the new context (e.g., different sun orientation)
+7. User exports layout B as PNG
+8. User compares the two PNGs side by side (outside the app)
 
-**Limitation (MVP)**: No side-by-side comparison. User must mentally compare or export PNGs of each layout. Multiple designs per project is deferred.
+**MVP Limitation**: No undo and no multiple designs per project — moving the house is a destructive action. The export-before-change workflow is the explicit workaround. This is a degraded experience; **multiple designs per project is a Phase 2 priority** to properly support layout comparison.
+
+**Post-conditions**: User has two exported PNGs to compare. The in-app design reflects the most recent layout only.
 
 ### UC4: Wizard Abandonment and Recovery
 
