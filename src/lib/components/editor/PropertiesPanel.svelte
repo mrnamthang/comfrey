@@ -47,6 +47,46 @@
 		/>
 	</div>
 
+	<!-- Rotation -->
+	{#if elementType?.canRotate}
+		<div>
+			<label for="el-rotation" class="block text-xs font-medium text-stone-500">Rotation</label>
+			<div class="mt-1 flex items-center gap-2">
+				<input
+					id="el-rotation"
+					type="range"
+					min="0"
+					max="360"
+					step="1"
+					value={element.properties.rotation}
+					oninput={(e) => project.updateElementProperties(element.id, { rotation: Number((e.target as HTMLInputElement).value) })}
+					class="flex-1"
+				/>
+				<span class="w-10 text-right text-xs text-stone-500">{element.properties.rotation}&deg;</span>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Scale -->
+	{#if elementType?.canResize}
+		<div>
+			<label for="el-scale" class="block text-xs font-medium text-stone-500">Scale</label>
+			<div class="mt-1 flex items-center gap-2">
+				<input
+					id="el-scale"
+					type="range"
+					min="0.5"
+					max="3"
+					step="0.1"
+					value={element.properties.scale}
+					oninput={(e) => project.updateElementProperties(element.id, { scale: Number((e.target as HTMLInputElement).value) })}
+					class="flex-1"
+				/>
+				<span class="w-10 text-right text-xs text-stone-500">{element.properties.scale}x</span>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Zone assignment -->
 	{#if element.properties.zone != null}
 		<div class="rounded bg-stone-50 px-3 py-2">

@@ -38,6 +38,8 @@
 		});
 	}
 
+	const PLANT_ICON_SVG = '<svg viewBox="0 0 24 24"><path d="M12 22V10M12 10C12 10 8 6 4 8c0 0-1 4 3 5 1.5.4 3.5 0 5-3z" fill="currentColor"/><path d="M12 10c0 0 4-4 8-2 0 0 1 4-3 5-1.5.4-3.5 0-5-3z" fill="currentColor" opacity="0.7"/></svg>';
+
 	async function loadIcons() {
 		const size = 32;
 		const colors: Record<string, string> = {
@@ -56,6 +58,12 @@
 			const imageData = await svgToImage(et.icon, size, color);
 			map.addImage(imgId, imageData);
 		}
+
+		// Load a default plant icon for plant database entries
+		if (!map.hasImage('element-plant-default')) {
+			const imageData = await svgToImage(PLANT_ICON_SVG, size, '#15803d');
+			map.addImage('element-plant-default', imageData);
+		}
 	}
 
 	function buildGeoJSON(): GeoJSON.FeatureCollection {
@@ -63,18 +71,24 @@
 			type: 'FeatureCollection',
 			features: elements
 				.filter((el) => el.geometry.type === 'Point')
-				.map((el) => ({
-					type: 'Feature' as const,
-					id: el.id,
-					properties: {
+				.map((el) => {
+					const isPlant = el.typeId.startsWith('plant:');
+					const iconId = isPlant ? 'element-plant-default' : `element-${el.typeId}`;
+					return {
+						type: 'Feature' as const,
 						id: el.id,
-						typeId: el.typeId,
-						icon: `element-${el.typeId}`,
-						label: el.properties.label ?? getElementType(el.typeId)?.name ?? el.typeId,
-						selected: el.id === selectedId ? 1 : 0
-					},
-					geometry: el.geometry
-				}))
+						properties: {
+							id: el.id,
+							typeId: el.typeId,
+							icon: iconId,
+							label: el.properties.label ?? getElementType(el.typeId)?.name ?? el.typeId,
+							selected: el.id === selectedId ? 1 : 0,
+							rotation: el.properties.rotation ?? 0,
+							scale: el.properties.scale ?? 1
+						},
+						geometry: el.geometry
+					};
+				})
 		};
 	}
 
@@ -104,7 +118,8 @@
 			source: SOURCE_ID,
 			layout: {
 				'icon-image': ['get', 'icon'],
-				'icon-size': 1,
+				'icon-size': ['get', 'scale'],
+				'icon-rotate': ['get', 'rotation'],
 				'icon-allow-overlap': true,
 				'icon-ignore-placement': true,
 				'text-field': ['get', 'label'],

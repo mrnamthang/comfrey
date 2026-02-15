@@ -264,5 +264,361 @@ export const advisorTips: AdvisorTip[] = [
 		learnMore:
 			'In permaculture, paths double as design elements. A gravel path acts as a firebreak, a mulched path suppresses weeds and slowly adds organic matter to adjacent beds, and a keyhole path maximises garden bed area while minimising walkway space.',
 		priority: 45
+	},
+
+	// ----------------------------------------------------------------
+	// 16-50: Expanded tips for Phase 2
+	// ----------------------------------------------------------------
+	{
+		id: 'design-review-zones',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Zone efficiency check',
+		explanation:
+			'Review whether your most-visited elements are in the closest zones. Herbs and salads should be in Zone 1, orchard in Zone 2, and field crops in Zone 3.',
+		shortReminder: 'Frequent-use items close to house.',
+		priority: 87
+	},
+	{
+		id: 'design-review-water',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Water strategy review',
+		explanation:
+			'Check that water flows from collection (tank) downhill through your productive zones. Every drop should be used at least twice before leaving the site.',
+		shortReminder: 'Water should cascade through productive zones.',
+		priority: 86
+	},
+	{
+		id: 'design-review-access',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Access and circulation',
+		explanation:
+			'Ensure all major areas are connected by paths. Consider: can you get a wheelbarrow from the compost to every garden bed? Is there vehicle access for emergencies?',
+		shortReminder: 'Wheelbarrow access to all beds.',
+		priority: 84
+	},
+	{
+		id: 'design-review-diversity',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Biological diversity',
+		explanation:
+			'A resilient design has many species. Aim for at least 3 canopy trees, 5 shrubs, and 10+ herbs/groundcovers. Diversity protects against pest outbreaks and provides year-round harvests.',
+		shortReminder: 'More species = more resilience.',
+		priority: 83
+	},
+	{
+		id: 'design-review-windbreak',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Windbreak placement',
+		explanation:
+			'Your prevailing wind sector should have a windbreak. Deciduous trees let winter sun through while blocking cold wind. Place the windbreak 3-5x its height from the protected area.',
+		shortReminder: 'Buffer wind before it hits productive zones.',
+		priority: 81
+	},
+	{
+		id: 'garden-bed-tropical-mulch',
+		trigger: { type: 'element_placed', elementType: 'garden-bed' },
+		climate: 'tropical',
+		headline: 'Mulch is your best friend',
+		explanation:
+			'In tropical climates, heavy mulch (15-20 cm) keeps soil cool, retains moisture through dry spells, and suppresses aggressive weeds. Use banana leaves, palm fronds, or wood chips.',
+		shortReminder: 'Heavy mulch for tropical beds.',
+		priority: 69
+	},
+	{
+		id: 'garden-bed-arid-shade',
+		trigger: { type: 'element_placed', elementType: 'garden-bed' },
+		climate: 'arid',
+		headline: 'Shade your garden beds',
+		explanation:
+			'In arid climates, garden beds benefit from 30-50% shade cloth during the hottest months. Position beds on the shaded side of trees or structures to reduce water needs by up to 40%.',
+		shortReminder: 'Shade reduces water use by 40%.',
+		priority: 67
+	},
+	{
+		id: 'water-tank-arid',
+		trigger: { type: 'element_placed', elementType: 'water-tank' },
+		climate: 'arid',
+		headline: 'Every drop counts',
+		explanation:
+			'In arid climates, size your tank generously — aim for at least 20,000 litres per 100 sqm of garden. Connect all roof surfaces and consider a first-flush diverter to keep water clean.',
+		shortReminder: 'Size tanks generously in dry climates.',
+		priority: 84
+	},
+	{
+		id: 'fruit-tree-guild',
+		trigger: { type: 'element_placed', elementType: 'fruit-tree' },
+		climate: 'all',
+		headline: 'Build a fruit tree guild',
+		explanation:
+			'Under each fruit tree, plant a guild: nitrogen fixers (clover, lupin), dynamic accumulators (comfrey), pest repellents (garlic, chives), and groundcovers (strawberry). Check the Guilds panel for suggestions.',
+		shortReminder: 'Add support plants under fruit trees.',
+		priority: 66
+	},
+	{
+		id: 'fruit-tree-temperate-spacing',
+		trigger: { type: 'element_placed', elementType: 'fruit-tree' },
+		climate: 'temperate',
+		headline: 'Space for the future canopy',
+		explanation:
+			'Standard fruit trees need 5-8m spacing. Dwarf varieties can be as close as 2-3m. Under-plant with shade-tolerant crops while waiting for the canopy to fill in.',
+		shortReminder: '5-8m spacing for standard trees.',
+		priority: 64
+	},
+	{
+		id: 'zone3-created',
+		trigger: { type: 'zone_created', zoneLevel: 3 },
+		climate: 'all',
+		headline: 'Zone 3: The farm zone',
+		explanation:
+			'Zone 3 is for larger-scale production: main crop areas, orchards, pasture for livestock, and large water features. Visit it weekly but it should be largely self-maintaining.',
+		shortReminder: 'Main crops and orchards in Zone 3.',
+		priority: 72
+	},
+	{
+		id: 'zone4-created',
+		trigger: { type: 'zone_created', zoneLevel: 4 },
+		climate: 'all',
+		headline: 'Zone 4: Semi-wild',
+		explanation:
+			'Zone 4 is semi-managed: timber, forage, windbreak, and wildlife corridors. Minimal intervention — plant once and let nature do most of the work.',
+		shortReminder: 'Timber and windbreaks in Zone 4.',
+		priority: 70
+	},
+	{
+		id: 'zone5-created',
+		trigger: { type: 'zone_created', zoneLevel: 5 },
+		climate: 'all',
+		headline: 'Zone 5: Wild sanctuary',
+		explanation:
+			'Zone 5 is unmanaged wilderness. It is your reference point — observe what grows here naturally and you will understand what your land wants to become. It is also habitat for beneficial insects and wildlife.',
+		shortReminder: 'Leave Zone 5 wild for observation.',
+		priority: 68
+	},
+	{
+		id: 'house-orientation-north',
+		trigger: { type: 'element_placed', elementType: 'house' },
+		hemisphere: 'northern',
+		climate: 'all',
+		headline: 'Orient for winter sun',
+		explanation:
+			'In the northern hemisphere, place the main living areas and garden beds on the south side of the house. The north side is cooler and better for storage, garages, and shade-tolerant plants.',
+		shortReminder: 'Living areas face south in N. hemisphere.',
+		priority: 89
+	},
+	{
+		id: 'house-orientation-south',
+		trigger: { type: 'element_placed', elementType: 'house' },
+		hemisphere: 'southern',
+		climate: 'all',
+		headline: 'Orient for winter sun',
+		explanation:
+			'In the southern hemisphere, place the main living areas and garden beds on the north side of the house. The south side is cooler and better for storage and shade-tolerant plants.',
+		shortReminder: 'Living areas face north in S. hemisphere.',
+		priority: 89
+	},
+	{
+		id: 'chicken-coop-tropical',
+		trigger: { type: 'element_placed', elementType: 'chicken-coop' },
+		climate: 'tropical',
+		headline: 'Ventilation is critical',
+		explanation:
+			'In tropical climates, chicken coops need maximum ventilation. Use wire mesh walls instead of solid ones, and provide shade with a living roof or vine-covered trellis.',
+		shortReminder: 'Open-sided coops for tropical heat.',
+		priority: 63
+	},
+	{
+		id: 'wizard-location',
+		trigger: { type: 'wizard_step', step: 'location' },
+		climate: 'all',
+		headline: 'Observe before you design',
+		explanation:
+			'The best permaculture designs come from careful observation. Before placing anything, spend time understanding how sun, wind, and water move through your site across the seasons.',
+		shortReminder: 'Observe first, design second.',
+		priority: 94
+	},
+	{
+		id: 'wizard-analysis',
+		trigger: { type: 'wizard_step', step: 'analysis' },
+		climate: 'all',
+		headline: 'Data meets intuition',
+		explanation:
+			'The site analysis gives you the measurable facts — sun angles, wind speed, slope. Combine these with your own observations: where does frost linger? Where do birds gather? Where is it naturally damp?',
+		shortReminder: 'Numbers plus observation equals good design.',
+		priority: 93
+	},
+	{
+		id: 'design-review-edge',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Maximise edge',
+		explanation:
+			'The edge between two ecosystems (pond/land, forest/meadow, garden/path) is the most productive zone. Design curving boundaries, keyhole beds, and herb spirals to increase the amount of edge in your design.',
+		shortReminder: 'More edge = more productivity.',
+		priority: 79
+	},
+	{
+		id: 'design-review-stacking',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Stack functions',
+		explanation:
+			'Every element should serve at least 3 functions. A pond produces fish, stores water, creates a micro-climate, reflects light, and attracts wildlife. If an element only does one thing, see if you can redesign it.',
+		shortReminder: 'Each element serves 3+ functions.',
+		priority: 78
+	},
+	{
+		id: 'design-review-energy',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Energy cycling',
+		explanation:
+			'Trace the path of nutrients through your design: kitchen waste → compost → garden → kitchen. Water: roof → tank → drip irrigation → mulch → soil → plants. Every output should become an input somewhere else.',
+		shortReminder: 'Every output is an input somewhere.',
+		priority: 77
+	},
+	{
+		id: 'design-review-succession',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Plan for succession',
+		explanation:
+			'Your design will change over time. Pioneer species give way to climax species. Plan for 3 stages: Year 1 (annuals and pioneers), Year 3 (shrubs established), Year 7+ (canopy closes). The action plan shows this phasing.',
+		shortReminder: 'Design evolves over 1-7+ years.',
+		priority: 76
+	},
+	{
+		id: 'compost-tropical',
+		trigger: { type: 'element_placed', elementType: 'compost' },
+		climate: 'tropical',
+		headline: 'Hot composting in the tropics',
+		explanation:
+			'Tropical heat accelerates decomposition. Your compost can be ready in 4-6 weeks. Place it in shade to prevent drying out and turn it frequently. Add dry carbon material (straw, dried leaves) to balance green inputs.',
+		shortReminder: 'Shade your compost pile in the tropics.',
+		priority: 58
+	},
+	{
+		id: 'water-tank-subtropical-rainwater',
+		trigger: { type: 'element_placed', elementType: 'water-tank' },
+		climate: 'subtropical',
+		headline: 'Monsoon harvesting',
+		explanation:
+			'Subtropical regions often have a wet season and a dry season. Size your tank to bridge the gap — calculate your dry-season water needs and ensure your roof catchment area can fill the tank during the wet months.',
+		shortReminder: 'Size tanks for the dry season gap.',
+		priority: 83
+	},
+	{
+		id: 'shed-workshop',
+		trigger: { type: 'element_placed', elementType: 'shed' },
+		climate: 'all',
+		headline: 'Multi-function shed',
+		explanation:
+			'Consider making your shed multi-functional: tool storage, potting bench, seed-starting area, and rain-water collection from its roof. A small overhang creates a dry workspace even in rain.',
+		shortReminder: 'Shed = tools + potting + rainwater.',
+		priority: 53
+	},
+	{
+		id: 'design-review-fire',
+		trigger: { type: 'design_review' },
+		climate: 'arid',
+		headline: 'Fire sector planning',
+		explanation:
+			'In fire-prone areas, create defensible space: 10m of low-fuel zone around structures, use fire-resistant species (succulents, stone fruit), and ensure gravel paths act as firebreaks.',
+		shortReminder: 'Defensible space + fire-resistant plants.',
+		priority: 85
+	},
+	{
+		id: 'garden-bed-keyhole',
+		trigger: { type: 'element_placed', elementType: 'garden-bed' },
+		climate: 'all',
+		headline: 'Consider keyhole beds',
+		explanation:
+			'Keyhole beds maximise growing area relative to path area. You can reach every part of the bed without stepping on the soil — this prevents compaction and keeps soil biology healthy.',
+		shortReminder: 'Keyhole shape = more bed, less path.',
+		priority: 62
+	},
+	{
+		id: 'design-review-resilience',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Resilience audit',
+		explanation:
+			'Ask: what happens if the main water source fails? If a key tree dies? If the climate shifts? A resilient design has backups: multiple water sources, diverse species, and no single points of failure.',
+		shortReminder: 'No single points of failure.',
+		priority: 74
+	},
+	{
+		id: 'companion-planting-tip',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Check companion planting',
+		explanation:
+			'Open the Guilds panel to see which of your plants grow well together and which should be separated. Good companions share nutrients, repel pests, and provide structural support for each other.',
+		shortReminder: 'Check Guilds panel for combos.',
+		priority: 73
+	},
+	{
+		id: 'design-review-soil',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Soil building strategy',
+		explanation:
+			'Healthy soil is the foundation. Plan for: compost application, chop-and-drop mulching from dynamic accumulators (comfrey, banana leaves), nitrogen fixers (clover, pigeon pea), and minimal tillage.',
+		shortReminder: 'Feed the soil, not just the plants.',
+		priority: 72
+	},
+	{
+		id: 'design-review-harvest',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Year-round harvest calendar',
+		explanation:
+			'Check that your plant selection provides food in every month. The Plants panel shows harvest months for each species. Aim for at least 2-3 crops harvestable in any given month.',
+		shortReminder: 'Something to harvest every month.',
+		priority: 71
+	},
+	{
+		id: 'garden-bed-raised-temperate',
+		trigger: { type: 'element_placed', elementType: 'garden-bed' },
+		climate: 'temperate',
+		headline: 'Raised beds warm faster',
+		explanation:
+			'In temperate climates, raised beds warm up 2-3 weeks earlier in spring, extending your growing season. Fill with a mix of logs (hugelkultur), compost, and topsoil for excellent drainage and fertility.',
+		shortReminder: 'Raised beds extend the season.',
+		priority: 61
+	},
+	{
+		id: 'design-review-nitrogen',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Nitrogen budget',
+		explanation:
+			'Count your nitrogen fixers (clover, beans, peas, pigeon pea, lucerne). Aim for at least 30% of your planted area to include nitrogen-fixing species. They feed the soil without external fertiliser.',
+		shortReminder: '30% nitrogen fixers target.',
+		priority: 70
+	},
+	{
+		id: 'fruit-tree-subtropical',
+		trigger: { type: 'element_placed', elementType: 'fruit-tree' },
+		climate: 'subtropical',
+		headline: 'Tropical and temperate mix',
+		explanation:
+			'Subtropical climates can grow both tropical fruits (mango, avocado, citrus) and temperate fruits (apple, pear). Create micro-climates: warm frost-free spots for tropicals, cooler shaded areas for stone fruit that need chill hours.',
+		shortReminder: 'Mix tropical and temperate species.',
+		priority: 63
+	},
+	{
+		id: 'design-review-pollinators',
+		trigger: { type: 'design_review' },
+		climate: 'all',
+		headline: 'Pollinator highway',
+		explanation:
+			'Ensure flowers are blooming in every season to support pollinators. Herbs like borage, lavender, thyme, and rosemary are excellent bee plants. Plant them along pathways and borders for a "pollinator highway".',
+		shortReminder: 'Flowers in every season for bees.',
+		priority: 69
 	}
 ];
