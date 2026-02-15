@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type mapboxgl from 'mapbox-gl';
+	import type maplibregl from 'maplibre-gl';
 	import type { Zone } from '$lib/types';
 
 	interface Props {
-		map: mapboxgl.Map;
+		map: maplibregl.Map;
 		zones: Zone[];
 		visible?: boolean;
 	}
@@ -29,7 +29,7 @@
 			}))
 		};
 
-		const source = map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+		const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 		if (source) {
 			source.setData(geojson as any);
 		} else {

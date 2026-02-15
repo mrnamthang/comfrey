@@ -4,10 +4,15 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+	resolve: {
+		alias: {
+			'mapbox-gl': 'maplibre-gl'
+		}
+	},
 	server: {
 		port: 5174,
 		host: true,
-		allowedHosts: ['comfrey.local']
+		allowedHosts: true
 	},
 	test: {
 		include: ['src/**/*.test.ts'],

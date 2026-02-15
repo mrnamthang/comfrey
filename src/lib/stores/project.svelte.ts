@@ -39,7 +39,7 @@ class ProjectStore {
 		this.current = {
 			id: projectId,
 			name,
-			land: { boundary, location, area },
+			land: { boundary: boundary as unknown as Project['land']['boundary'], location, area },
 			analysis: { status: 'success', data: analysis, error: null },
 			designs: [design],
 			advisorState: { seenTips: [], dismissedTips: [], appliedTips: [] },

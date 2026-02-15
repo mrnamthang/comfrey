@@ -1,12 +1,11 @@
 <script lang="ts">
-  import mapboxgl from 'mapbox-gl';
-  import 'mapbox-gl/dist/mapbox-gl.css';
-  import { env } from '$env/dynamic/public';
+  import maplibregl from 'maplibre-gl';
+  import 'maplibre-gl/dist/maplibre-gl.css';
 
   interface Props {
     center?: [number, number];
     zoom?: number;
-    onMapReady?: (map: mapboxgl.Map) => void;
+    onMapReady?: (map: maplibregl.Map) => void;
     onMapClick?: (lngLat: { lng: number; lat: number }) => void;
   }
 
@@ -40,23 +39,45 @@
 
     if (!container) return;
 
-    mapboxgl.accessToken = env.PUBLIC_MAPBOX_TOKEN;
-
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12',
+      style: {
+        version: 8,
+        sources: {
+          'google-satellite': {
+            type: 'raster',
+            tiles: [
+              'https://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+              'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+              'https://mt2.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+              'https://mt3.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
+            ],
+            tileSize: 256,
+            maxzoom: 21
+          }
+        },
+        layers: [
+          {
+            id: 'google-satellite',
+            type: 'raster',
+            source: 'google-satellite',
+            minzoom: 0,
+            maxzoom: 22
+          }
+        ]
+      },
       center,
       zoom,
-      preserveDrawingBuffer: true
+      canvasContextAttributes: { preserveDrawingBuffer: true }
     });
 
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
     map.on('load', () => {
       onMapReady?.(map);
     });
 
-    map.on('click', (e: mapboxgl.MapMouseEvent) => {
+    map.on('click', (e: maplibregl.MapMouseEvent) => {
       onMapClick?.({ lng: e.lngLat.lng, lat: e.lngLat.lat });
     });
 

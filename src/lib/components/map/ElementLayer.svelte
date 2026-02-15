@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type mapboxgl from 'mapbox-gl';
+	import type maplibregl from 'maplibre-gl';
 	import type { Element } from '$lib/types';
 	import { getElementType } from '$lib/catalog/elements';
 
 	interface Props {
-		map: mapboxgl.Map;
+		map: maplibregl.Map;
 		elements: Element[];
 		selectedId?: string | null;
 		onElementClick?: (id: string) => void;
@@ -35,7 +35,7 @@
 		};
 
 		// Add or update source
-		const source = map.getSource(SOURCE_ID) as mapboxgl.GeoJSONSource | undefined;
+		const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 		if (source) {
 			source.setData(geojson as any);
 		} else {
@@ -88,7 +88,7 @@
 			});
 
 			// Click handler
-			map.on('click', LAYER_ID, (e: mapboxgl.MapMouseEvent) => {
+			map.on('click', LAYER_ID, (e: maplibregl.MapLayerMouseEvent) => {
 				const features = e.features;
 				if (features && features.length > 0) {
 					const id = features[0].properties?.id;
@@ -97,7 +97,7 @@
 					}
 				}
 			});
-			map.on('click', SELECTED_LAYER_ID, (e: mapboxgl.MapMouseEvent) => {
+			map.on('click', SELECTED_LAYER_ID, (e: maplibregl.MapLayerMouseEvent) => {
 				const features = e.features;
 				if (features && features.length > 0) {
 					const id = features[0].properties?.id;

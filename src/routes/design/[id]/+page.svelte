@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type mapboxgl from 'mapbox-gl';
+	import type maplibregl from 'maplibre-gl';
 	import type { Element } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -21,8 +21,8 @@
 	import { exportDesignAsPNG } from '$lib/services/export';
 
 	const projectId = $derived(page.params.id);
-	let map: mapboxgl.Map | null = $state(null);
-	let dragMarker: mapboxgl.Marker | null = null;
+	let map: maplibregl.Map | null = $state(null);
+	let dragMarker: maplibregl.Marker | null = null;
 
 	let elements = $derived(project.activeDesign?.elements ?? []);
 	let zones = $derived(project.activeDesign?.zones ?? []);
@@ -68,7 +68,7 @@
 		}, 1000);
 	});
 
-	function handleMapReady(m: mapboxgl.Map) {
+	function handleMapReady(m: maplibregl.Map) {
 		map = m;
 		if (project.current) {
 			const [lng, lat] = project.current.land.location;
@@ -177,8 +177,8 @@
 		el.style.cursor = 'grab';
 		el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
 
-		const mapboxgl = (await import('mapbox-gl')).default;
-		dragMarker = new mapboxgl.Marker({ element: el, draggable: true })
+		const maplibregl = (await import('maplibre-gl')).default;
+		dragMarker = new maplibregl.Marker({ element: el, draggable: true })
 			.setLngLat(pos)
 			.addTo(map);
 

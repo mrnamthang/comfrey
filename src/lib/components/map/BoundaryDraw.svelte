@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type mapboxgl from 'mapbox-gl';
+	import type maplibregl from 'maplibre-gl';
 	import MapboxDraw from '@mapbox/mapbox-gl-draw';
 	import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 
@@ -9,7 +9,7 @@
 	}
 
 	interface Props {
-		map: mapboxgl.Map;
+		map: maplibregl.Map;
 		initialBoundary?: GeoJSON.Polygon | null;
 		onBoundaryChange: (polygon: GeoJSON.Polygon | null) => void;
 		actions?: DrawActions;
@@ -61,7 +61,7 @@
 			]
 		});
 
-		map.addControl(d as unknown as mapboxgl.IControl);
+		map.addControl(d as unknown as maplibregl.IControl);
 
 		// Load initial boundary if provided
 		if (initialBoundary) {
@@ -101,10 +101,14 @@
 		};
 
 		return () => {
-			map.off('draw.create', handleDrawEvent);
-			map.off('draw.update', handleDrawEvent);
-			map.off('draw.delete', handleDrawEvent);
-			map.removeControl(d as unknown as mapboxgl.IControl);
+			try {
+				map.off('draw.create', handleDrawEvent);
+				map.off('draw.update', handleDrawEvent);
+				map.off('draw.delete', handleDrawEvent);
+				map.removeControl(d as unknown as maplibregl.IControl);
+			} catch {
+				// Map may already be destroyed
+			}
 			actions = undefined;
 		};
 	});

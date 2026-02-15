@@ -1,5 +1,5 @@
 <script lang="ts">
-	import mapboxgl from 'mapbox-gl';
+	import maplibregl from 'maplibre-gl';
 	import MapView from '$lib/components/map/MapView.svelte';
 
 	interface Props {
@@ -11,11 +11,11 @@
 
 	let { location, boundary, initialHousePosition = null, onHousePlaced }: Props = $props();
 
-	let map: mapboxgl.Map | null = $state(null);
+	let map: maplibregl.Map | null = $state(null);
 	let housePosition: [number, number] | null = $state(initialHousePosition ?? null);
-	let marker: mapboxgl.Marker | null = null;
+	let marker: maplibregl.Marker | null = null;
 
-	function handleMapReady(m: mapboxgl.Map) {
+	function handleMapReady(m: maplibregl.Map) {
 		map = m;
 		m.flyTo({ center: [location.lng, location.lat], zoom: 17, duration: 0 });
 
@@ -70,7 +70,7 @@
 		</svg>`;
 		el.style.cursor = 'grab';
 
-		marker = new mapboxgl.Marker({ element: el, draggable: true })
+		marker = new maplibregl.Marker({ element: el, draggable: true })
 			.setLngLat(pos)
 			.addTo(map);
 

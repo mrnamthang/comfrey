@@ -297,7 +297,7 @@ function makeZone(level: 0 | 1 | 2 | 3 | 4, geometry: GeoJSON.Polygon): Zone {
 	return {
 		id: createId(),
 		level: meta.level,
-		geometry,
+		geometry: geometry as unknown as Zone['geometry'],
 		color: toRgba(meta.color, meta.opacity),
 		description: meta.description
 	};

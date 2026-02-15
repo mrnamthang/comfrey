@@ -1,9 +1,8 @@
 /**
- * Mapbox Geocoding API integration.
+ * Nominatim (OpenStreetMap) Geocoding integration.
  * Converts addresses to coordinates and provides autocomplete.
+ * Free, no API key needed.
  */
-
-import { env } from '$env/dynamic/public';
 
 export interface GeocodingResult {
 	place_name: string;
@@ -11,14 +10,13 @@ export interface GeocodingResult {
 }
 
 /**
- * Search for addresses using the Mapbox Geocoding API v5.
+ * Search for addresses using the Nominatim API.
  * Returns up to 5 matching results, or an empty array on failure.
  */
 export async function geocodeSearch(query: string): Promise<GeocodingResult[]> {
 	try {
-		const token = env.PUBLIC_MAPBOX_TOKEN;
 		const encoded = encodeURIComponent(query);
-		const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encoded}.json?access_token=${token}&limit=5`;
+		const url = `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=5&email=comfrey-app@users.noreply.github.com`;
 
 		const response = await fetch(url);
 
@@ -29,13 +27,13 @@ export async function geocodeSearch(query: string): Promise<GeocodingResult[]> {
 
 		const data = await response.json();
 
-		if (!data.features || !Array.isArray(data.features)) {
+		if (!Array.isArray(data)) {
 			return [];
 		}
 
-		return data.features.map((feature: { place_name: string; center: [number, number] }) => ({
-			place_name: feature.place_name,
-			center: feature.center
+		return data.map((item: { display_name: string; lon: string; lat: string }) => ({
+			place_name: item.display_name,
+			center: [parseFloat(item.lon), parseFloat(item.lat)] as [number, number]
 		}));
 	} catch (error) {
 		console.error('Geocoding search failed:', error);
@@ -44,13 +42,12 @@ export async function geocodeSearch(query: string): Promise<GeocodingResult[]> {
 }
 
 /**
- * Reverse geocode coordinates to a place name using the Mapbox Geocoding API v5.
+ * Reverse geocode coordinates to a place name using the Nominatim API.
  * Returns the place name string, or null on failure.
  */
 export async function reverseGeocode(lng: number, lat: number): Promise<string | null> {
 	try {
-		const token = env.PUBLIC_MAPBOX_TOKEN;
-		const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&limit=1`;
+		const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&email=comfrey-app@users.noreply.github.com`;
 
 		const response = await fetch(url);
 
@@ -61,11 +58,7 @@ export async function reverseGeocode(lng: number, lat: number): Promise<string |
 
 		const data = await response.json();
 
-		if (!data.features || !Array.isArray(data.features) || data.features.length === 0) {
-			return null;
-		}
-
-		return data.features[0].place_name ?? null;
+		return data.display_name ?? null;
 	} catch (error) {
 		console.error('Reverse geocoding failed:', error);
 		return null;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type mapboxgl from 'mapbox-gl';
+	import type maplibregl from 'maplibre-gl';
 	import MapView from '$lib/components/map/MapView.svelte';
 	import BoundaryDraw, { type DrawActions } from '$lib/components/map/BoundaryDraw.svelte';
 	import { validateBoundary } from '$lib/utils/validation';
@@ -14,7 +14,7 @@
 
 	let { location, initialBoundary = null, onBoundarySet }: Props = $props();
 
-	let map: mapboxgl.Map | null = $state(null);
+	let map: maplibregl.Map | null = $state(null);
 	let boundary: GeoJSON.Polygon | null = $state(null);
 	let drawActions: DrawActions | undefined = $state();
 	let unitSystem: 'metric' | 'imperial' = $state('metric');
@@ -30,7 +30,7 @@
 		}
 	});
 
-	function handleMapReady(m: mapboxgl.Map) {
+	function handleMapReady(m: maplibregl.Map) {
 		map = m;
 		m.flyTo({ center: [location.lng, location.lat], zoom: 17, duration: 0 });
 	}

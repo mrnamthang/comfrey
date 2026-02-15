@@ -1,16 +1,16 @@
 <script lang="ts">
-	import mapboxgl from 'mapbox-gl';
+	import maplibregl from 'maplibre-gl';
 
 	interface Props {
-		map: mapboxgl.Map;
+		map: maplibregl.Map;
 		lngLat: { lng: number; lat: number };
 	}
 
 	let { map, lngLat }: Props = $props();
-	let marker: mapboxgl.Marker | null = $state(null);
+	let marker: maplibregl.Marker | null = $state(null);
 
 	$effect(() => {
-		marker = new mapboxgl.Marker({ color: '#15803d' })
+		marker = new maplibregl.Marker({ color: '#15803d' })
 			.setLngLat([lngLat.lng, lngLat.lat])
 			.addTo(map);
 

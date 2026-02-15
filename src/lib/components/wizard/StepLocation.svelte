@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type mapboxgl from 'mapbox-gl';
+	import type maplibregl from 'maplibre-gl';
 	import MapView from '$lib/components/map/MapView.svelte';
 	import AddressSearch from '$lib/components/map/AddressSearch.svelte';
 	import LocationMarker from '$lib/components/map/LocationMarker.svelte';
@@ -11,7 +11,7 @@
 
 	let { onLocationSet, initialLocation = null }: Props = $props();
 
-	let map: mapboxgl.Map | null = $state(null);
+	let map: maplibregl.Map | null = $state(null);
 	let selectedLocation: { lng: number; lat: number; placeName: string } | null = $state(null);
 
 	// Restore location when returning to this step
@@ -21,7 +21,7 @@
 		}
 	});
 
-	function handleMapReady(m: mapboxgl.Map) {
+	function handleMapReady(m: maplibregl.Map) {
 		map = m;
 		// If there's an initial location, fly to it
 		if (initialLocation) {
@@ -54,7 +54,7 @@
 	<!-- Search bar overlay -->
 	<div class="relative z-10 p-4">
 		<div class="mx-auto max-w-lg">
-			<AddressSearch onSelect={handleSearchSelect} />
+			<AddressSearch onSelect={handleSearchSelect} initialQuery={initialLocation?.placeName ?? ''} />
 		</div>
 	</div>
 
