@@ -63,7 +63,7 @@
 		if (saveTimer) clearTimeout(saveTimer);
 		saveTimer = setTimeout(() => {
 			if (project.current) {
-				saveProject(project.current);
+				saveProject($state.snapshot(project.current));
 			}
 		}, 1000);
 	});

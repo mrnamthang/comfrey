@@ -84,9 +84,9 @@
 		const zones = generateZones(housePosition, boundary, boundaryArea);
 		project.updateZones(zones);
 
-		// Save to IndexedDB
+		// Save to IndexedDB — $state.snapshot() strips the Svelte proxy
 		if (project.current) {
-			await saveProject(project.current);
+			await saveProject($state.snapshot(project.current));
 		}
 
 		// Navigate to editor

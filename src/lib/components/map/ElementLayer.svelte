@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type maplibregl from 'maplibre-gl';
 	import type { Element } from '$lib/types';
-	import { getElementType } from '$lib/catalog/elements';
+	import { elementTypes, getElementType } from '$lib/catalog/elements';
 
 	interface Props {
 		map: maplibregl.Map;
@@ -13,11 +13,53 @@
 	let { map, elements, selectedId = null, onElementClick }: Props = $props();
 
 	const SOURCE_ID = 'elements-source';
-	const LAYER_ID = 'elements-layer';
-	const SELECTED_LAYER_ID = 'elements-selected-layer';
+	const ICON_LAYER_ID = 'elements-icons';
+	const SELECTED_LAYER_ID = 'elements-selected-ring';
+	const LABEL_LAYER_ID = 'elements-labels';
 
-	$effect(() => {
-		const geojson: GeoJSON.FeatureCollection = {
+	let layersCreated = false;
+
+	function svgToImage(svgStr: string, size: number, color: string): Promise<ImageData> {
+		return new Promise((resolve) => {
+			const colored = svgStr.replace(/currentColor/g, color);
+			const blob = new Blob([colored], { type: 'image/svg+xml' });
+			const url = URL.createObjectURL(blob);
+			const img = new Image(size, size);
+			img.onload = () => {
+				const canvas = document.createElement('canvas');
+				canvas.width = size;
+				canvas.height = size;
+				const ctx = canvas.getContext('2d')!;
+				ctx.drawImage(img, 0, 0, size, size);
+				URL.revokeObjectURL(url);
+				resolve(ctx.getImageData(0, 0, size, size));
+			};
+			img.src = url;
+		});
+	}
+
+	async function loadIcons() {
+		const size = 32;
+		const colors: Record<string, string> = {
+			structure: '#1a1a1a',
+			plant: '#15803d',
+			water: '#1d4ed8',
+			animal: '#b45309',
+			path: '#78716c',
+			utility: '#6b7280'
+		};
+
+		for (const et of elementTypes) {
+			const imgId = `element-${et.id}`;
+			if (map.hasImage(imgId)) continue;
+			const color = colors[et.category] ?? '#15803d';
+			const imageData = await svgToImage(et.icon, size, color);
+			map.addImage(imgId, imageData);
+		}
+	}
+
+	function buildGeoJSON(): GeoJSON.FeatureCollection {
+		return {
 			type: 'FeatureCollection',
 			features: elements
 				.filter((el) => el.geometry.type === 'Point')
@@ -27,98 +69,112 @@
 					properties: {
 						id: el.id,
 						typeId: el.typeId,
+						icon: `element-${el.typeId}`,
 						label: el.properties.label ?? getElementType(el.typeId)?.name ?? el.typeId,
 						selected: el.id === selectedId ? 1 : 0
 					},
 					geometry: el.geometry
 				}))
 		};
+	}
 
-		// Add or update source
+	function createLayers() {
+		const geojson = buildGeoJSON();
+
+		map.addSource(SOURCE_ID, { type: 'geojson', data: geojson as any });
+
+		// Selected ring (behind icon)
+		map.addLayer({
+			id: SELECTED_LAYER_ID,
+			type: 'circle',
+			source: SOURCE_ID,
+			filter: ['==', ['get', 'selected'], 1],
+			paint: {
+				'circle-radius': 22,
+				'circle-color': 'transparent',
+				'circle-stroke-width': 3,
+				'circle-stroke-color': '#3b82f6'
+			}
+		});
+
+		// Icons
+		map.addLayer({
+			id: ICON_LAYER_ID,
+			type: 'symbol',
+			source: SOURCE_ID,
+			layout: {
+				'icon-image': ['get', 'icon'],
+				'icon-size': 1,
+				'icon-allow-overlap': true,
+				'icon-ignore-placement': true,
+				'text-field': ['get', 'label'],
+				'text-size': 11,
+				'text-offset': [0, 1.6],
+				'text-anchor': 'top',
+				'text-optional': true
+			},
+			paint: {
+				'text-color': '#1c1917',
+				'text-halo-color': '#ffffff',
+				'text-halo-width': 1.5
+			}
+		});
+
+		// Click handlers
+		map.on('click', ICON_LAYER_ID, handleLayerClick);
+		map.on('click', SELECTED_LAYER_ID, handleLayerClick);
+		map.on('mouseenter', ICON_LAYER_ID, () => { map.getCanvas().style.cursor = 'pointer'; });
+		map.on('mouseleave', ICON_LAYER_ID, () => { map.getCanvas().style.cursor = ''; });
+
+		layersCreated = true;
+	}
+
+	function handleLayerClick(e: maplibregl.MapLayerMouseEvent) {
+		const features = e.features;
+		if (features && features.length > 0) {
+			const id = features[0].properties?.id;
+			if (id && onElementClick) {
+				onElementClick(id);
+			}
+		}
+	}
+
+	function updateData() {
 		const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
 		if (source) {
-			source.setData(geojson as any);
-		} else {
-			map.addSource(SOURCE_ID, { type: 'geojson', data: geojson as any });
-
-			// Unselected elements: colored circles
-			map.addLayer({
-				id: LAYER_ID,
-				type: 'circle',
-				source: SOURCE_ID,
-				filter: ['==', ['get', 'selected'], 0],
-				paint: {
-					'circle-radius': 10,
-					'circle-color': '#15803d',
-					'circle-stroke-width': 2,
-					'circle-stroke-color': '#ffffff'
-				}
-			});
-
-			// Selected element: larger circle with blue ring
-			map.addLayer({
-				id: SELECTED_LAYER_ID,
-				type: 'circle',
-				source: SOURCE_ID,
-				filter: ['==', ['get', 'selected'], 1],
-				paint: {
-					'circle-radius': 14,
-					'circle-color': '#15803d',
-					'circle-stroke-width': 3,
-					'circle-stroke-color': '#3b82f6'
-				}
-			});
-
-			// Labels
-			map.addLayer({
-				id: 'elements-labels',
-				type: 'symbol',
-				source: SOURCE_ID,
-				layout: {
-					'text-field': ['get', 'label'],
-					'text-size': 11,
-					'text-offset': [0, 1.8],
-					'text-anchor': 'top'
-				},
-				paint: {
-					'text-color': '#1c1917',
-					'text-halo-color': '#ffffff',
-					'text-halo-width': 1.5
-				}
-			});
-
-			// Click handler
-			map.on('click', LAYER_ID, (e: maplibregl.MapLayerMouseEvent) => {
-				const features = e.features;
-				if (features && features.length > 0) {
-					const id = features[0].properties?.id;
-					if (id && onElementClick) {
-						onElementClick(id);
-					}
-				}
-			});
-			map.on('click', SELECTED_LAYER_ID, (e: maplibregl.MapLayerMouseEvent) => {
-				const features = e.features;
-				if (features && features.length > 0) {
-					const id = features[0].properties?.id;
-					if (id && onElementClick) {
-						onElementClick(id);
-					}
-				}
-			});
-
-			// Cursor
-			map.on('mouseenter', LAYER_ID, () => { map.getCanvas().style.cursor = 'pointer'; });
-			map.on('mouseleave', LAYER_ID, () => { map.getCanvas().style.cursor = ''; });
-			map.on('mouseenter', SELECTED_LAYER_ID, () => { map.getCanvas().style.cursor = 'pointer'; });
-			map.on('mouseleave', SELECTED_LAYER_ID, () => { map.getCanvas().style.cursor = ''; });
+			source.setData(buildGeoJSON() as any);
 		}
+	}
+
+	// One-time setup: load icons and create layers
+	$effect(() => {
+		loadIcons().then(() => {
+			if (!layersCreated) {
+				createLayers();
+			}
+		});
 
 		return () => {
-			if (map.getLayer('elements-labels')) map.removeLayer('elements-labels');
-			if (map.getLayer(SELECTED_LAYER_ID)) map.removeLayer(SELECTED_LAYER_ID);
-			if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
-			if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+			try {
+				map.off('click', ICON_LAYER_ID, handleLayerClick);
+				map.off('click', SELECTED_LAYER_ID, handleLayerClick);
+				if (map.getLayer(ICON_LAYER_ID)) map.removeLayer(ICON_LAYER_ID);
+				if (map.getLayer(SELECTED_LAYER_ID)) map.removeLayer(SELECTED_LAYER_ID);
+				if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+			} catch {
+				// Map may already be destroyed
+			}
+			layersCreated = false;
 		};
+	});
+
+	// Update data when elements or selection changes
+	$effect(() => {
+		// Read reactive dependencies
+		void elements;
+		void selectedId;
+		if (layersCreated) {
+			updateData();
+		}
 	});
 </script>
