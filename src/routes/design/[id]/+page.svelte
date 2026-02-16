@@ -28,6 +28,7 @@
 	import { processEvent, type DesignEvent } from '$lib/services/advisor';
 	import { saveProject, loadProject, exportProjectJSON } from '$lib/services/storage';
 	import { exportDesignAsPNG } from '$lib/services/export';
+	import { learning } from '$lib/stores/learning.svelte';
 
 	const projectId = $derived(page.params.id);
 	let map: maplibregl.Map | null = $state(null);
@@ -53,6 +54,7 @@
 
 	// Load project from IndexedDB on mount
 	onMount(async () => {
+		learning.load();
 		if (!project.current || project.current.id !== projectId) {
 			const loaded = await loadProject(projectId);
 			if (loaded) {
@@ -431,6 +433,15 @@
 				>
 					Review
 				</button>
+				<span class="w-px bg-stone-200"></span>
+				<button
+					onclick={() => { editor.toggleLearnPanel(); }}
+					class="rounded px-2 py-1 text-xs font-medium {editor.learnPanel !== 'closed'
+						? 'bg-indigo-600 text-white'
+						: 'bg-stone-100 text-stone-600 hover:bg-stone-200'}"
+				>
+					Learn
+				</button>
 			</div>
 			<!-- Layer toggles -->
 			<div class="mt-2 flex flex-wrap gap-1">
@@ -612,6 +623,11 @@
 
 		<!-- Advisor card overlay -->
 		<AdvisorCard />
+
+		<!-- Learning Hub panel -->
+		{#await import('$lib/components/editor/LearnPanel.svelte') then { default: LearnPanel }}
+			<LearnPanel />
+		{/await}
 
 		<!-- Placement mode indicator -->
 		{#if editor.tool === 'place' && editor.placingType}
