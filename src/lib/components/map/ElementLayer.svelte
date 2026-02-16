@@ -17,11 +17,15 @@
 	const SELECTED_LAYER_ID = 'elements-selected-ring';
 	const LABEL_LAYER_ID = 'elements-labels';
 
-	let layersCreated = false;
+	let layersCreated = $state(false);
 
 	function svgToImage(svgStr: string, size: number, color: string): Promise<ImageData> {
-		return new Promise((resolve) => {
-			const colored = svgStr.replace(/currentColor/g, color);
+		return new Promise((resolve, reject) => {
+			// Ensure xmlns is present for standalone SVG rendering
+			let colored = svgStr.replace(/currentColor/g, color);
+			if (!colored.includes('xmlns=')) {
+				colored = colored.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+			}
 			const blob = new Blob([colored], { type: 'image/svg+xml' });
 			const url = URL.createObjectURL(blob);
 			const img = new Image(size, size);
@@ -33,6 +37,10 @@
 				ctx.drawImage(img, 0, 0, size, size);
 				URL.revokeObjectURL(url);
 				resolve(ctx.getImageData(0, 0, size, size));
+			};
+			img.onerror = () => {
+				URL.revokeObjectURL(url);
+				reject(new Error('Failed to load SVG icon'));
 			};
 			img.src = url;
 		});
@@ -51,19 +59,34 @@
 			utility: '#6b7280'
 		};
 
-		for (const et of elementTypes) {
-			const imgId = `element-${et.id}`;
-			if (map.hasImage(imgId)) continue;
-			const color = colors[et.category] ?? '#15803d';
-			const imageData = await svgToImage(et.icon, size, color);
-			map.addImage(imgId, imageData);
+		const promises = elementTypes
+			.filter((et) => !map.hasImage(`element-${et.id}`))
+			.map(async (et) => {
+				try {
+					const color = colors[et.category] ?? '#15803d';
+					const imageData = await svgToImage(et.icon, size, color);
+					if (!map.hasImage(`element-${et.id}`)) {
+						map.addImage(`element-${et.id}`, imageData);
+					}
+				} catch (e) {
+					console.warn(`Failed to load icon for ${et.id}:`, e);
+				}
+			});
+
+		// Load default plant icon in parallel
+		if (!map.hasImage('element-plant-default')) {
+			promises.push(
+				svgToImage(PLANT_ICON_SVG, size, '#15803d')
+					.then((imageData) => {
+						if (!map.hasImage('element-plant-default')) {
+							map.addImage('element-plant-default', imageData);
+						}
+					})
+					.catch((e) => console.warn('Failed to load plant icon:', e))
+			);
 		}
 
-		// Load a default plant icon for plant database entries
-		if (!map.hasImage('element-plant-default')) {
-			const imageData = await svgToImage(PLANT_ICON_SVG, size, '#15803d');
-			map.addImage('element-plant-default', imageData);
-		}
+		await Promise.all(promises);
 	}
 
 	function buildGeoJSON(): GeoJSON.FeatureCollection {
