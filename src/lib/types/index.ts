@@ -231,3 +231,27 @@ export interface AdvisorState {
 	dismissedTips: string[]; // tip IDs the user dismissed
 	appliedTips: string[]; // tip IDs the user accepted
 }
+
+// ============================================================
+// Learning Hub
+// ============================================================
+
+export type LessonCategory = 'principles' | 'plants' | 'tutorials';
+
+export interface Lesson {
+	id: string;
+	category: LessonCategory;
+	title: string;
+	summary: string;
+	readingTime: number;
+	body: string;
+	relevance: {
+		tools: string[];
+		climates: string[];
+	};
+	tryItAction?: {
+		label: string;
+		panel?: string;
+		layer?: string;
+	};
+}
