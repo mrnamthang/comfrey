@@ -7,6 +7,7 @@ class EditorStore {
 		'library' | 'properties' | 'analysis' | 'advisor' | 'action-plan' | 'plants' | 'guilds' | 'ai-settings'
 	>('library');
 	measurePoints = $state<[number, number][]>([]);
+	learnPanel = $state<'closed' | 'minimized' | 'open' | 'maximized'>('closed');
 
 	clearMeasure(): void {
 		this.measurePoints = [];
@@ -14,6 +15,10 @@ class EditorStore {
 
 	addMeasurePoint(lngLat: [number, number]): void {
 		this.measurePoints = [...this.measurePoints, lngLat];
+	}
+
+	toggleLearnPanel(): void {
+		this.learnPanel = this.learnPanel === 'closed' ? 'open' : 'closed';
 	}
 }
 
